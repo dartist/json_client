@@ -1,6 +1,7 @@
 JsonClient for Dart
 ===================
 
-JsonClient is an async HTTP Client optimized for accessing JSON web services.
-It takes advantages of Dart's *noSuchMethod* dynamic language feature to provide a succinct API, with each method supporting both callback and Futures async API styles.
+An async HTTP Client optimized for accessing JSON web services.
+
+JsonClient takes advantages of Dart's dynamic *noSuchMethod* language feature to provide an intuitive, succinct API with all methods supporting both callback and Futures async API styles.
 
