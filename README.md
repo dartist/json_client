@@ -3,7 +3,7 @@ JsonClient for Dart
 
 Is a generic async HTTP Client optimized for consuming JSON web services. 
 
-Until the Dart package manager is built [JsonClient.dart](https://github.com/mythz/DartJsonClient/blob/master/JsonClient.dart) is a single, stand-alone .dart file that's an easy drop-in any project. You can watch this repo or follow [@demisbellot](http://twitter.com/demisbellot) for updates.
+Until the Dart package manager is built [JsonClient.dart](https://github.com/mythz/DartJsonClient/blob/master/JsonClient.dart) is a single, stand-alone .dart file that's an easy drop-in any project. The current version relies on the **dart:io** package so only works in the Dart VM. A future update will include an identical JsonClient that wraps XMLHttpRequest so can be transpiled to JavaScript and run in all browsers. You can watch this repo or follow [@demisbellot](http://twitter.com/demisbellot) for updates.
 
 JsonClient takes advantages of Dart's **noSuchMethod** language feature to offer a succinct, ruby-esque dynamic API as well as the standard get/post/put/delete HTTP Client methods found in most HTTP clients. 
 
