@@ -37,6 +37,7 @@ Do_RestFiles(){
   client.files('?path=services', (r) => print("GET response: ${r}") );
   client.get('files?path=services', (r) => print("GET response: ${r}") );
 
+  print("Testing error handler on invalid requests...");
   client.post('files?forDownload=1BrokenRequest', success: null, 
     error: (e) => print("POST error response: ${e}") );
 }
