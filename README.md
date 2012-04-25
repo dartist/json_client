@@ -28,7 +28,7 @@ This call makes a JSON request for the [/todos](http://www.servicestack.net/Back
 
 The standard in JavaScript, where you pass a callback function that gets called when the response is received - which in Dart looks like:
 
-    client.todos( (response) => print("There are ${response.length} todos") );
+    client.todos( (response) => print("I have ${response.length} things left todo") );
 
 The other option is to use Dart's [Future's API](http://api.dartlang.org/dart_core/Future.html) to attach your callback as a continuation on the returned Future, which looks like:
 
