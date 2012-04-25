@@ -82,7 +82,7 @@ A global error handler should you wish to handle errors generically:
 
 ## Callbacks vs Futures
 
-Now that we've covered the basics, lets go through a more complete demo to give you a taste on how the different async API styles compare. For this example we'll delete all the existing TODOs, create new ones and call an existing function to mark one of them as complete.
+Now that we've covered the basics, lets go through a more complete demo to give you a taste of how the different async API styles compare. For this example we'll delete all the existing TODOs, create new ones from a list and re-use an existing function to mark one of them as completed.
 
 The todos and function all examples will use is below:
 
@@ -107,7 +107,7 @@ http://www.servicestack.net/Backbone.Todos/
 
 ### Using Async Callbacks
 
-The normal javascript way to handle async calls is with callbacks and the shortest code to achieve what we want with callbacks would looks something like:
+The normal javascript way to handle async calls is with callbacks and the shortest code to achieve what we want with callbacks would look something like:
 
     createTodos() {
         int i=0;
@@ -129,7 +129,7 @@ The normal javascript way to handle async calls is with callbacks and the shorte
             createTodos();
     });    
 
-From this example we can see using callbacks can lead you to couple the request with the handling of the response which makes re-usability and DRY difficult. We also have to be wary when making multiple async calls that we only continue after we've processed the last response. There are a few pitfalls to be careful of as well like if there are no existing TODOs none of your inner delete callbacks will be fired so you have to make a special case for when there are no existing TODOs. 
+From this example we can see using callbacks can lead to coupling of the request with the custom response handler logic which inhibits re-usability and DRY. We also have to be wary when making multiple async calls that we only continue after we've processed the last response. There are a few pitfalls to be careful of here like if there are no existing TODOs, none of your inner delete callbacks will get fired so you have to make a special case for when there are no existing TODOs. 
 
 ### Futures in Dart
 
