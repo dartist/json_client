@@ -22,7 +22,7 @@ With the just client and the url in-place, we can now start making API calls - W
 
     client.todos();
 
-This call makes a JSON request for the [{urlRoot}/todos](http://www.servicestack.net/Backbone.Todos/todos?format=json) url. Since all API methods on the client are async, the two ways we have to access the response include:
+This call makes a JSON request for the [/todos](http://www.servicestack.net/Backbone.Todos/todos?format=json) url. Since all API methods on the client are async, the two ways we have to access the response include:
 
 ### Normal async callbacks
 
@@ -45,7 +45,7 @@ Which will GET the JSON at `{urlRoot}/todos/1`. The param can also be a String w
     client.files("services/FilesService.cs.txt").then( 
         (fileInfo) => print("${fileInfo['Name']} is ${fileInfo['FileSizeBytes']} bytes") );
 
-Which just makes a GET request to [{urlRoot}/files/services/FilesService.cs.txt](http://www.servicestack.net/RestFiles/files/services/FilesService.cs.txt).
+Which just makes a JSON GET request to [/files/services/FilesService.cs.txt](http://www.servicestack.net/RestFiles/files/services/FilesService.cs.txt).
 
 If however the param is an **Object** or a **List** (i.e. Array in JavaScript) then a **POST** request is made instead so creating a new todo item can be done with:
 
@@ -82,7 +82,7 @@ A global error handler should you wish to handle errors generically:
 
 ## Callbacks vs Futures
 
-Now that we've covered the basics, lets go through a more complete demo to give you a taste on how the different API examples compare. For this example we'll delete all the existing TODOs, create new ones and call an existing function to mark one of them as complete.
+Now that we've covered the basics, lets go through a more complete demo to give you a taste on how the different async API styles compare. For this example we'll delete all the existing TODOs, create new ones and call an existing function to mark one of them as complete.
 
 The todos and function all examples will use is below:
 
