@@ -73,8 +73,8 @@ Chainging the urlRoot:
 
 Request and response filters allowing you to decorate HTTP requests before they're sent, or HTTP responses before they're processed:
 
-    client.requestFilter = (HttpClientRequest httpReq)  { ... };
-    client.requestFilter = (HttpClientResponse httpRes) { ... };
+    client.requestFilter  = (HttpClientRequest httpReq)  { ... };
+    client.responseFilter = (HttpClientResponse httpRes) { ... };
 
 A global error handler should you wish to handle errors generically:
 
@@ -199,8 +199,7 @@ More client usage examples can be seen at [Example.dart](https://github.com/myth
 
 Hopefully this library proves useful, and am always interested in any feedback or issues. 
 
-Contributions in the form of documentation, tests and examples are more than welcome. 
-I'll package this up into a library as soon as the Dart package manager comes into fruition and add more tests when the Mirrors Reflection API has been added and a solid test-suite has emerged.
+Contributions in any form e.g. Documentation, tests, examples, etc are greatly appreciated. 
+This will be packaged into a library as soon as the Dart package manager comes into fruition and more tests added when the Mirrors Reflection API has been added and a solid test-suite has emerged.
 
 In the meantime you can follow [@demisbellot](http://twitter.com/demisbellot) for updates.
-
