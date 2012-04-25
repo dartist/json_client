@@ -39,6 +39,11 @@ The dynamic API also supports optional params, any scalar variable (e.g. String,
 
     client.todos(1, (todo) => print("I still need to do ${todo['content']}") );
 
+or the same with Futures:
+
+    client.todos(1)
+      .then( (todo) => print("I still need to do ${todo['content']}") );
+
 Which will GET the JSON at `{urlRoot}/todos/1`. The param can also be a String which is just appended as-is so can also include queryString params. Here's another example of making a GET request for fileInfo from the [WebDav-like RestFiles Service](http://www.servicestack.net/RestFiles):
 
     var client = new JsonClient("http://www.servicestack.net/RestFiles");
