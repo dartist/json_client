@@ -190,23 +190,23 @@ class JsonClient {
 
         Object response = null;
         if (buffer != null && !buffer.isEmpty()) {
-
           String data = buffer.toString();
           try {
             logDebug("RECV onData: $data");
             response = JSON.parse(data);
           }
           catch (final e) { _notifyError(task, e, "Error Parsing: $data", errorFn); return; }
-
-          if (httpRes.statusCode < 400) {
-            try {
-              task.complete(response);
-              if (successFn != null) successFn(response);
-            } catch (final e) { logError(e); }
-          } else {
-            _notifyError(task, response, null, errorFn);
-          }
         }
+
+        if (httpRes.statusCode < 400) {
+          try {
+            task.complete(response);
+            if (successFn != null) successFn(response);
+          } catch (final e) { logError(e); }
+        } else {
+          _notifyError(task, response, null, errorFn);
+        }
+
       };
       input.onError = (e) => _notifyError(task, e, "input.onError(): $e", errorFn);
     };
