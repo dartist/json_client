@@ -88,10 +88,13 @@ class JsonClient {
     ajax('DELETE', url, null, success, error);
 
   void _notifyError (Completer task, e, [String msg, Function errorFn]) {
-    logError("onErr:");
+    logError("_notifyError:");
     HttpException ex = e is HttpException ? e : null;
+    HttpClientResponse httpRes = e is HttpClientResponse ? e : null;
     if (ex != null)
       logError("HttpException($msg): ${ex.message}");
+    else if (httpRes != null)
+      logError("HttpResponse(${httpRes.statusCode}): ${httpRes.reasonPhrase}");
     else
       logError("Error($msg): ${e.toString()}");
 
@@ -204,7 +207,7 @@ class JsonClient {
             if (successFn != null) successFn(response);
           } catch (final e) { logError(e); }
         } else {
-          _notifyError(task, response, null, errorFn);
+          _notifyError(task, httpRes, "Error statusCode: ${httpRes.statusCode}", errorFn);
         }
 
       };
