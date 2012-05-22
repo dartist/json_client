@@ -22,85 +22,101 @@ class JsonClient {
   ResponseFilter responseFilter;
   Function onError;
   int logLevel;
-  
+
   JsonClient(String urlRoot, [this.requestFilter, this.responseFilter])
   {
     baseUri = new Uri.fromString(urlRoot);
-    logLevel = LogLevel.None; 
+    logLevel = LogLevel.Info;
   }
-  
+
   void set urlRoot(String url) {
     baseUri = new Uri.fromString(url);
   }
-  
+
   void logDebug (arg) {
     if (logLevel >= LogLevel.Debug) print(arg);
   }
   void logError (arg) {
     if (logLevel >= LogLevel.Error) print(arg);
   }
-  
+
   Future noSuchMethod(name, args) {
-    
+
     var reqData;
     Function successFn, errorFn;
-    
+
     if (args.length > 0) {
       reqData = args[0] is! Function ? args[0] : null;
       successFn = reqData == null && args[0] is Function ? args[0] : null;
-      
+
       if (args.length > 1) {
         if (successFn == null)
           successFn = args[1];
-        else 
+        else
           errorFn = args[1];
-        
+
         if (args.length > 2)
           errorFn = args[2];
       }
-    }    
-    
+    }
+
     String url = name;
-    Map postData = null;    
+    Map postData = null;
     if (reqData is Map || reqData is List) {
       postData = reqData;
     } else if (reqData != null) {
-      url += "$reqData".startsWith("?") 
+      url += "$reqData".startsWith("?")
         ? reqData
-        : "/$reqData"; 
+        : "/$reqData";
     }
 
-    String httpMethod = postData == null ? 'GET' : 'POST';    
-    
+    String httpMethod = postData == null ? 'GET' : 'POST';
+
     return ajax(httpMethod, url, postData, successFn, errorFn);
   }
-  
+
   Future get (url, [success, error]) =>
     ajax('GET', url, null, success, error);
-  
+
   Future post (url, [data, success, error]) =>
     ajax('POST', url, data, success, error);
-  
+
   Future put (url, [data, success, error]) =>
     ajax('PUT', url, data, success, error);
-  
+
   Future delete (url, [success, error]) =>
     ajax('DELETE', url, null, success, error);
-    
-  Future ajax (String httpMethod, String url, [postData, Function successFn, Function errorFn]){
+
+  void _notifyError (Completer task, e, [String msg, Function errorFn]) {
+    logError("onErr:");
+    HttpException ex = e is HttpException ? e : null;
+    if (ex != null)
+      logError("HttpException($msg): ${ex.message}");
+    else
+      logError("Error($msg): ${e.toString()}");
+
+    if (errorFn != null)
+      errorFn(e);
+    if (onError != null)
+      onError(e);
+
+    task.completeException(e);
+  }
+
+  Future ajax (String httpMethod, String url, [Object postData, Function successFn, Function errorFn]){
 
     Completer task = new Completer();
-    
-    int port = baseUri.port == 0 ? 80 : baseUri.port; 
-    
-    bool isUrl = url.startsWith("http"); 
+
+    int port = baseUri.port == 0 ? 80 : baseUri.port;
+
+    bool isUrl = url.startsWith("http");
     Uri uri = isUrl ? new Uri.fromString(url) : baseUri;
-    String path = isUrl 
-      ? uri.path + uri.query 
+    String path = isUrl
+      ? uri.path + uri.query
       : url.startsWith("/")
         ? url
         : "${uri.path}/${url}";
-    
+
     if (logLevel >= LogLevel.Debug) {
       Map status = {
         'hasData': postData != null,
@@ -115,90 +131,87 @@ class JsonClient {
       };
       logDebug("${status}");
     }
-    
-    void notifyError (e, [String msg]) {      
-      logError("onErr:");
-      HttpException ex = e is HttpException ? e : null;
-      if (ex != null)
-        logError("HttpException($msg): ${ex.message}");
-      else
-        logError("Error($msg): ${e.toString()}");
-      
-      if (errorFn != null)
-        errorFn(e);
-      if (onError != null)
-        onError(e);      
-      
-      task.completeException(e);
-    }
 
-    HttpClient client = new HttpClient(); 
-    HttpClientConnection conn = client.open(httpMethod, uri.domain, port, path); 
-    conn.onRequest = (HttpClientRequest httpReq) { 
-      logDebug("onReq");
-      
+    HttpClient client = new HttpClient();
+    HttpClientConnection conn = client.open(httpMethod, uri.domain, port, path);
+
+    _handleRequest(conn, httpMethod, postData, path);
+    _handleResponse(task, client, conn, successFn, errorFn);
+
+    return task.future;
+  }
+
+  _handleRequest(HttpClientConnection conn, String httpMethod, Object postData, String path){
+    conn.onRequest = (HttpClientRequest httpReq) {
+      logDebug("onReq: httpMethod: $httpMethod, postData: $postData, path: $path");
+
       //Already gets sent
-      //httpReq.headers.set(HttpHeaders.HOST, uri.domain); 
+      //httpReq.headers.set(HttpHeaders.HOST, uri.domain);
       httpReq.headers.set(HttpHeaders.ACCEPT, "application/json");
-      
+
       if (requestFilter != null) requestFilter(httpReq);
-      
-      bool hasRequestBody = false;
+
       if (httpMethod == "POST" || httpMethod == "PUT") {
-        httpReq.headers.set(HttpHeaders.CONTENT_TYPE, "application/json"); 
+        httpReq.headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
         if (postData != null) {
           String jsonData = JSON.stringify(postData);
-          httpReq.contentLength = jsonData.length;
           logDebug("writting: ${jsonData} at ${path}");
+          httpReq.contentLength = jsonData.length;
           httpReq.outputStream.writeString(jsonData);
-          hasRequestBody = true;
         }
-      }      
-      //need to set since transfer is chunked-encoding
-      if (!hasRequestBody) httpReq.contentLength = 0;             
-      httpReq.outputStream.close(); 
-    }; 
-    conn.onResponse = (HttpClientResponse httpRes) { 
+        else {
+          httpReq.contentLength = 0;
+        }
+      }
+
+      httpReq.outputStream.close();
+    };
+  }
+
+  _handleResponse(Completer task, HttpClient client, HttpClientConnection conn, Function successFn, Function errorFn){
+    conn.onResponse = (HttpClientResponse httpRes) {
       logDebug("onRes: ${httpRes.statusCode}");
       if (responseFilter != null) responseFilter(httpRes);
-      
+
       final StringInputStream input = new StringInputStream(httpRes.inputStream);
       StringBuffer buffer = new StringBuffer('');
+
       input.onData = () {
         logDebug("adding data..");
         buffer.add(input.read());
       };
-      
-      complete(response) {
-        try {
-          task.complete(response);
-          if (successFn != null) successFn(response);
-        } catch (final e) { logError(e); }
-      }
+
       input.onClosed = (){
         logDebug("input.onClosed().. ${httpRes.statusCode}");
-        if (buffer == null || buffer.isEmpty()) {
-          complete(null);
-        } else {
+
+        try {
+          client.shutdown();
+        } catch(var e){ _notifyError(task, e, " on shutdown()", errorFn); return; }
+
+        Object response = null;
+        if (buffer != null && !buffer.isEmpty()) {
+
           String data = buffer.toString();
           try {
-            var response = JSON.parse(data);
-            if (httpRes.statusCode < 400) 
-              complete(response);
-            else
-              notifyError(response);
+            logDebug("RECV onData: $data");
+            response = JSON.parse(data);
           }
-          catch (final e) {
-            notifyError(e, "Error Parsing: $data");
+          catch (final e) { _notifyError(task, e, "Error Parsing: $data", errorFn); return; }
+
+          if (httpRes.statusCode < 400) {
+            try {
+              task.complete(response);
+              if (successFn != null) successFn(response);
+            } catch (final e) { logError(e); }
+          } else {
+            _notifyError(task, response, null, errorFn);
           }
         }
-        
-        client.shutdown(); 
       };
+      input.onError = (e) => _notifyError(task, e, "input.onError(): $e", errorFn);
     };
-    conn.onError = notifyError;
-    
-    return task.future;
+
+    conn.onError = (e) => _notifyError(task, e, "conn.onError(): $e", errorFn);
   }
-  
+
 }
