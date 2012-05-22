@@ -26,7 +26,7 @@ class JsonClient {
   JsonClient(String urlRoot, [this.requestFilter, this.responseFilter])
   {
     baseUri = new Uri.fromString(urlRoot);
-    logLevel = LogLevel.Info;
+    logLevel = LogLevel.Warn;
   }
 
   void set urlRoot(String url) {
@@ -35,6 +35,9 @@ class JsonClient {
 
   void logDebug (arg) {
     if (logLevel >= LogLevel.Debug) print(arg);
+  }
+  void logInfo (arg) {
+    if (logLevel >= LogLevel.Info) print(arg);
   }
   void logError (arg) {
     if (logLevel >= LogLevel.Error) print(arg);
@@ -88,22 +91,25 @@ class JsonClient {
     ajax('DELETE', url, null, success, error);
 
   void _notifyError (Completer task, e, [String msg, Function errorFn]) {
-    logError("_notifyError:");
-    HttpException ex = e is HttpException ? e : null;
     HttpClientResponse httpRes = e is HttpClientResponse ? e : null;
-    if (ex != null)
-      logError("HttpException($msg): ${ex.message}");
-    else if (httpRes != null)
-      logError("HttpResponse(${httpRes.statusCode}): ${httpRes.reasonPhrase}");
+    HttpException httpEx = e is HttpException ? e : null;
+    if (httpRes != null)
+      logInfo("HttpResponse(${httpRes.statusCode}): ${httpRes.reasonPhrase}. msg:$msg");
+    else if (httpEx != null)
+      logError("HttpException($msg): ${httpEx.message}");
     else
-      logError("Error($msg): ${e.toString()}");
+      logError("_notifyError($msg): ${e.toString()}");
 
     if (errorFn != null)
       errorFn(e);
     if (onError != null)
       onError(e);
 
-    task.completeException(e);
+    try {
+      task.completeException(e);
+    } catch (var ex){
+      logError("Error on task.completeException(e): $ex. Return true in ExHandler to mark as handled");
+    }
   }
 
   Future ajax (String httpMethod, String url, [Object postData, Function successFn, Function errorFn]){
@@ -205,9 +211,10 @@ class JsonClient {
           try {
             task.complete(response);
             if (successFn != null) successFn(response);
-          } catch (final e) { logError(e); }
+          } catch (final e) { logError(e); return; }
         } else {
           _notifyError(task, httpRes, "Error statusCode: ${httpRes.statusCode}", errorFn);
+          return;
         }
 
       };
