@@ -1,4 +1,4 @@
-#import("package:JsonClient/JsonClient.dart");
+#import("package:DartJsonClient/JsonClient.dart");
 
 newClient(String url) {
   var client = new JsonClient(url);
