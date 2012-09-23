@@ -1,4 +1,4 @@
-#import("JsonClient.dart");
+#import("package:JsonClient/JsonClient.dart");
 
 newClient(String url) {
   var client = new JsonClient(url);
@@ -31,7 +31,7 @@ Do_RestFiles(){
 
   client.get('files/Global.asax.cs.txt', (r) => print("Global.asax:\n\n${r['File']['Contents']}") );  
   
-  int nowMs = (new Date.now()).value;
+  int nowMs = (new Date.now()).millisecondsSinceEpoch;
   client.files({'path':'newFolder$nowMs'}, (r) => print("POST response: ${r}") );
 
   client.files('?path=services', (r) => print("GET response: ${r}") );

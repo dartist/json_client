@@ -68,9 +68,12 @@ class JsonClient {
     if (reqData is Map || reqData is List) {
       postData = reqData;
     } else if (reqData != null) {
-      url += "$reqData".startsWith("?")
-        ? reqData
-        : "/$reqData";
+      if (reqData.startsWith("?")){
+        url = "$url$reqData";
+      }
+      else {
+        url = "$url/$reqData";        
+      }        
     }
 
     String httpMethod = postData == null ? 'GET' : 'POST';
@@ -107,7 +110,7 @@ class JsonClient {
 
     try {
       task.completeException(e);
-    } catch (var ex){
+    } catch (ex){
       logError("Error on task.completeException(e): $ex. Return true in ExHandler to mark as handled");
     }
   }
@@ -121,7 +124,7 @@ class JsonClient {
     bool isUrl = url.startsWith("http");
     Uri uri = isUrl ? new Uri.fromString(url) : baseUri;
     String path = isUrl
-      ? uri.path + uri.query
+      ? "${uri.path}${uri.query}"
       : url.startsWith("/")
         ? url
         : "${uri.path}/${url}";
@@ -195,7 +198,7 @@ class JsonClient {
 
         try {
           client.shutdown();
-        } catch(var e){ _notifyError(task, e, " on shutdown()", errorFn); return; }
+        } catch(e){ _notifyError(task, e, " on shutdown()", errorFn); return; }
 
         Object response = null;
         if (buffer != null && !buffer.isEmpty()) {
@@ -204,14 +207,14 @@ class JsonClient {
             logDebug("RECV onData: $data");
             response = JSON.parse(data);
           }
-          catch (final e) { _notifyError(task, e, "Error Parsing: $data", errorFn); return; }
+          catch(e) { _notifyError(task, e, "Error Parsing: $data", errorFn); return; }
         }
 
         if (httpRes.statusCode < 400) {
           try {
             task.complete(response);
             if (successFn != null) successFn(response);
-          } catch (final e) { logError(e); return; }
+          } catch(e) { logError(e); return; }
         } else {
           _notifyError(task, httpRes, "Error statusCode: ${httpRes.statusCode}", errorFn);
           return;
