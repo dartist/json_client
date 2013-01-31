@@ -1,4 +1,6 @@
-#import("package:DartJsonClient/JsonClient.dart");
+import "package:json_client/json_client.dart";
+
+import "dart:async";
 
 newClient(String url) {
   var client = new JsonClient(url);
@@ -57,7 +59,7 @@ Do_BackboneTodos([option=1]){
   final String completeTodo = 'Mark this todo as done';
 
   markTodoCompleted(List createdTodos) {
-    List matchingTodos = createdTodos.filter((x) => x['content'] == completeTodo);
+    List matchingTodos = createdTodos.where((x) => x['content'] == completeTodo);
     var todo = matchingTodos[0];
     todo['done'] = true;
     client.put("todos/${todo['id']}", todo);    
@@ -130,10 +132,10 @@ Do_BackboneTodos([option=1]){
 
     client.todos()
       .then((List existingTodos) {
-        Futures.wait(existingTodos.map((x) => client.delete('todos/${x['id']}')))
+        Future.wait(existingTodos.mappedBy((x) => client.delete('todos/${x['id']}')))
           .then((_) { 
               int i=0;
-              Futures.wait(todos.map((text) => client.todos({'content':text, 'order':i++})))
+              Future.wait(todos.mappedBy((text) => client.todos({'content':text, 'order':i++})))
                 .then(markTodoCompleted);
           });      
       });    

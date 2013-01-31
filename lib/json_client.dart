@@ -1,13 +1,14 @@
-#library("JsonClient");
+library json_client;
 
-#import("dart:uri");
-#import("dart:io");
-#import("dart:json");
+import "dart:uri";
+import "dart:io";
+import "dart:async";
+import "dart:json" as JSON;
 
 typedef void RequestFilter(HttpClientRequest httpReq);
 typedef void ResponseFilter(HttpClientResponse httpRes);
 
-interface LogLevel {
+class LogLevel {
   static final int None = 0;
   static final int Error = 1;
   static final int Warn = 2;
@@ -43,10 +44,13 @@ class JsonClient {
     if (logLevel >= LogLevel.Error) print(arg);
   }
 
-  Future noSuchMethod(name, args) {
+  Future noSuchMethod(InvocationMirror im) {
 
     var reqData;
     Function successFn, errorFn;
+   
+    var name = im.memberName;
+    var args = im.positionalArguments;
 
     if (args.length > 0) {
       reqData = args[0] is! Function ? args[0] : null;
@@ -109,7 +113,7 @@ class JsonClient {
       onError(e);
 
     try {
-      task.completeException(e);
+      task.completeError(e);
     } catch (ex){
       logError("Error on task.completeException(e): $ex. Return true in ExHandler to mark as handled");
     }
@@ -201,7 +205,7 @@ class JsonClient {
         } catch(e){ _notifyError(task, e, " on shutdown()", errorFn); return; }
 
         Object response = null;
-        if (buffer != null && !buffer.isEmpty()) {
+        if (buffer != null && !buffer.isEmpty) {
           String data = buffer.toString();
           try {
             logDebug("RECV onData: $data");
