@@ -44,7 +44,7 @@ This call makes a JSON request for the [/todos](http://www.servicestack.net/Back
 
 ### Using Futures in Dart 
 
-We use Dart's [Future's API](http://api.dartlang.org/dart_core/Future.html) to attach your callback as a continuation on the returned Future, which looks like:
+We use Dart's [Future's API](http://www.dartlang.org/articles/using-future-based-apis/) to attach your callback as a continuation on the returned Future, which looks like:
 
 ```dart
 client.todos()
