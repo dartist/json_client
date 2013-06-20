@@ -136,7 +136,7 @@ List todos = [
 final String completeTodo = 'Mark this todo as done';
 
 markTodoCompleted(List createdTodos) {
-    List matchingTodos = createdTodos.filter((x) => x['content'] == completeTodo);
+    List matchingTodos = createdTodos.where((x) => x['content'] == completeTodo).toList();
     var todo = matchingTodos[0];
     todo['done'] = true;
     client.put("todos/${todo['id']}", todo);    
