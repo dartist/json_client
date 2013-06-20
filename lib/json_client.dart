@@ -1,7 +1,8 @@
 library json_client;
 
-import "dart:uri";
+import "dart:core";
 import "dart:io";
+import "dart:mirrors";
 import "dart:async";
 import "dart:json" as JSON;
 
@@ -24,14 +25,14 @@ class JsonClient {
   Function onError;
   int logLevel;
 
-  JsonClient(String urlRoot, [this.requestFilter, this.responseFilter])
+  JsonClient(String urlRoot)
   {
-    baseUri = new Uri.fromString(urlRoot);
+    baseUri = Uri.parse(urlRoot);
     logLevel = LogLevel.Warn;
   }
 
   void set urlRoot(String url) {
-    baseUri = new Uri.fromString(url);
+    baseUri = Uri.parse(url);
   }
 
   void logDebug (arg) {
@@ -43,28 +44,53 @@ class JsonClient {
   void logError (arg) {
     if (logLevel >= LogLevel.Error) print(arg);
   }
+  
+  String _trimStart(String str, String start) {
+    if (str.startsWith(start) && str.length > start.length) {
+      return str.substring(start.length);
+    }
+    return str;
+  }
+  
+  String _combinePaths(List paths){
+    var sb = new StringBuffer();
+    bool endsWithSlash = false;
+    for (var oPath in paths){
+      if (oPath == null) continue;
+      String path = oPath.toString();
+      if (path.isEmpty) continue;
+      
+      if (sb.length > 0 && !endsWithSlash)
+        sb.write('/');
+      
+      String sanitizedPath = _trimStart(path.replaceAll("\\", "/"), "/");
+      sb.write(sanitizedPath);
+      endsWithSlash = sanitizedPath.endsWith("/");
+    }
+    return sb.toString();
+  }
 
-  Future noSuchMethod(InvocationMirror im) {
+  Future get (url) =>
+    ajax('GET', url, null);
 
+  Future post (url, [data]) =>
+    ajax('POST', url, data);
+
+  Future put (url, [data]) =>
+    ajax('PUT', url, data);
+
+  Future delete (url) =>
+    ajax('DELETE', url, null);
+
+  Future noSuchMethod(Invocation im) {
     var reqData;
     Function successFn, errorFn;
    
-    var name = im.memberName;
+    var name = MirrorSystem.getName(im.memberName);
     var args = im.positionalArguments;
 
     if (args.length > 0) {
-      reqData = args[0] is! Function ? args[0] : null;
-      successFn = reqData == null && args[0] is Function ? args[0] : null;
-
-      if (args.length > 1) {
-        if (successFn == null)
-          successFn = args[1];
-        else
-          errorFn = args[1];
-
-        if (args.length > 2)
-          errorFn = args[2];
-      }
+      reqData = args[0];
     }
 
     String url = name;
@@ -72,66 +98,32 @@ class JsonClient {
     if (reqData is Map || reqData is List) {
       postData = reqData;
     } else if (reqData != null) {
-      if (reqData.startsWith("?")){
+      if (reqData is String && reqData.startsWith("?")){
         url = "$url$reqData";
       }
       else {
-        url = "$url/$reqData";        
+        url = _combinePaths([url, reqData]);        
       }        
     }
 
     String httpMethod = postData == null ? 'GET' : 'POST';
+    
+    return ajax(httpMethod, url, postData);
+  } 
+  
+  Future ajax (String httpMethod, String url, [Object postData]){
 
-    return ajax(httpMethod, url, postData, successFn, errorFn);
-  }
-
-  Future get (url, [success, error]) =>
-    ajax('GET', url, null, success, error);
-
-  Future post (url, [data, success, error]) =>
-    ajax('POST', url, data, success, error);
-
-  Future put (url, [data, success, error]) =>
-    ajax('PUT', url, data, success, error);
-
-  Future delete (url, [success, error]) =>
-    ajax('DELETE', url, null, success, error);
-
-  void _notifyError (Completer task, e, [String msg, Function errorFn]) {
-    HttpClientResponse httpRes = e is HttpClientResponse ? e : null;
-    HttpException httpEx = e is HttpException ? e : null;
-    if (httpRes != null)
-      logInfo("HttpResponse(${httpRes.statusCode}): ${httpRes.reasonPhrase}. msg:$msg");
-    else if (httpEx != null)
-      logError("HttpException($msg): ${httpEx.message}");
-    else
-      logError("_notifyError($msg): ${e.toString()}");
-
-    if (errorFn != null)
-      errorFn(e);
-    if (onError != null)
-      onError(e);
-
-    try {
-      task.completeError(e);
-    } catch (ex){
-      logError("Error on task.completeException(e): $ex. Return true in ExHandler to mark as handled");
-    }
-  }
-
-  Future ajax (String httpMethod, String url, [Object postData, Function successFn, Function errorFn]){
-
-    Completer task = new Completer();
-
+    var task = new Completer();    
+    
     int port = baseUri.port == 0 ? 80 : baseUri.port;
 
-    bool isUrl = url.startsWith("http");
-    Uri uri = isUrl ? new Uri.fromString(url) : baseUri;
-    String path = isUrl
+    bool isFullUrl = url.startsWith("http");
+    Uri uri = isFullUrl ? Uri.parse(url) : baseUri;
+    String path = isFullUrl
       ? "${uri.path}${uri.query}"
       : url.startsWith("/")
         ? url
-        : "${uri.path}/${url}";
+        : _combinePaths([uri.path, url]);
 
     if (logLevel >= LogLevel.Debug) {
       Map status = {
@@ -141,24 +133,18 @@ class JsonClient {
         'httpMethod': httpMethod,
         'postData': postData,
         'port': port,
+        'url': url,
         'uri': uri,
-        'uri.domain': uri.domain,
+        'uri.host': uri.host,
+        'uri.path': uri.path,
+        'uri.query': uri.query,
         'path': path
       };
       logDebug("${status}");
     }
 
-    HttpClient client = new HttpClient();
-    HttpClientConnection conn = client.open(httpMethod, uri.domain, port, path);
-
-    _handleRequest(conn, httpMethod, postData, path);
-    _handleResponse(task, client, conn, successFn, errorFn);
-
-    return task.future;
-  }
-
-  _handleRequest(HttpClientConnection conn, String httpMethod, Object postData, String path){
-    conn.onRequest = (HttpClientRequest httpReq) {
+    var client = new HttpClient();
+    client.open(httpMethod, uri.host, port, path).then((HttpClientRequest httpReq){
       logDebug("onReq: httpMethod: $httpMethod, postData: $postData, path: $path");
 
       //Already gets sent
@@ -170,65 +156,71 @@ class JsonClient {
       if (httpMethod == "POST" || httpMethod == "PUT") {
         httpReq.headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
         if (postData != null) {
-          String jsonData = JSON.stringify(postData);
+          var jsonData = JSON.stringify(postData);
           logDebug("writting: ${jsonData} at ${path}");
           httpReq.contentLength = jsonData.length;
-          httpReq.outputStream.writeString(jsonData);
+          httpReq.write(jsonData);
         }
         else {
           httpReq.contentLength = 0;
         }
       }
 
-      httpReq.outputStream.close();
-    };
-  }
-
-  _handleResponse(Completer task, HttpClient client, HttpClientConnection conn, Function successFn, Function errorFn){
-    conn.onResponse = (HttpClientResponse httpRes) {
-      logDebug("onRes: ${httpRes.statusCode}");
+      return httpReq.close();
+    })
+    .then((HttpClientResponse httpRes){
+      logDebug("httpRes: ${httpRes.statusCode}");
       if (responseFilter != null) responseFilter(httpRes);
 
-      final StringInputStream input = new StringInputStream(httpRes.inputStream);
-      StringBuffer buffer = new StringBuffer('');
-
-      input.onData = () {
-        logDebug("adding data..");
-        buffer.add(input.read());
-      };
-
-      input.onClosed = (){
-        logDebug("input.onClosed().. ${httpRes.statusCode}");
-
-        try {
-          client.shutdown();
-        } catch(e){ _notifyError(task, e, " on shutdown()", errorFn); return; }
-
-        Object response = null;
-        if (buffer != null && !buffer.isEmpty) {
-          String data = buffer.toString();
+      StringBuffer sb = new StringBuffer();
+      httpRes.transform(new StringDecoder())
+        .listen((String data){
+          sb.write(data);
+        })
+        .onDone((){
+          var data = sb.toString();
+          Object response = null;
           try {
-            logDebug("RECV onData: $data");
-            response = JSON.parse(data);
+            logDebug("RECV onData: $data");            
+            response = data.isEmpty 
+              ? null
+              : JSON.parse(data);
           }
-          catch(e) { _notifyError(task, e, "Error Parsing: $data", errorFn); return; }
-        }
+          catch(e) { _notifyError(task, e, "Error Parsing: $data"); return; }
 
-        if (httpRes.statusCode < 400) {
-          try {
-            task.complete(response);
-            if (successFn != null) successFn(response);
-          } catch(e) { logError(e); return; }
-        } else {
-          _notifyError(task, httpRes, "Error statusCode: ${httpRes.statusCode}", errorFn);
-          return;
-        }
+          if (httpRes.statusCode < 400) {
+            try {
+              task.complete(response);
+            } catch(e) { logError(e); return; }
+          } else {
+            _notifyError(task, httpRes, "Error statusCode: ${httpRes.statusCode}");
+            return;
+          }
 
-      };
-      input.onError = (e) => _notifyError(task, e, "input.onError(): $e", errorFn);
-    };
+        });
 
-    conn.onError = (e) => _notifyError(task, e, "conn.onError(): $e", errorFn);
+    });
+    
+    return task.future;    
   }
 
+  void _notifyError (Completer task, e, [String msg]){
+    HttpClientResponse httpRes = e is HttpClientResponse ? e : null;
+    HttpException httpEx = e is HttpException ? e : null;
+    if (httpRes != null)
+      logInfo("HttpResponse(${httpRes.statusCode}): ${httpRes.reasonPhrase}. msg:$msg");
+    else if (httpEx != null)
+      logError("HttpException($msg): ${httpEx.message}");
+    else
+      logError("_notifyError($msg): ${e.toString()}");
+
+    if (onError != null)
+      onError(e);
+
+    try {
+      task.completeError(e);
+    } catch (ex){
+      logError("Error on task.completeException(e): $ex. Return true in ExHandler to mark as handled");
+    }
+  }
 }

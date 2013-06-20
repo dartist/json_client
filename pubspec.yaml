@@ -1,5 +1,8 @@
 name: json_client
-version: 0.0.1
-author: Demis Bellot
-description: JSON HTTP Client for Dart
-homepage: https://github.com/Dartist/JsonClient
+version: 0.1.1
+author: Demis Bellot<demis.bellot@gmail.com>
+description: A generic async HTTP Client optimized for consuming JSON web services
+homepage: https://github.com/dartist/json_client
+
+#dependencies:
+#  unittest: any
