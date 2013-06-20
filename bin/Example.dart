@@ -81,14 +81,14 @@ Do_BackboneTodos(){
   }
     
   client.todos()
-  .then((List existingTodos){
-    Future.wait(existingTodos.map((x) => client.delete('todos/${x['id']}')) )
-      .then((_) { 
-          int i=0;
-          Future.wait( todos.map((text) => client.todos({'content':text, 'order':i++})) )
-            .then( markTodoCompleted );
-      });      
-  });    
+    .then((List existingTodos){
+      Future.wait(existingTodos.map((x) => client.delete('todos/${x['id']}')) )
+        .then((_) { 
+            int i=0;
+            Future.wait( todos.map((text) => client.todos({'content':text, 'order':i++})) )
+              .then( markTodoCompleted );
+        });      
+    });    
 }
 
 void main() {

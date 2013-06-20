@@ -117,11 +117,11 @@ Futures in Dart also go by the name of [Promises](http://en.wikipedia.org/wiki/F
 
     client.todos()
       .then((List existingTodos){
-        Futures.wait( existingTodos.map((x) => client.delete('todos/${x['id']}')) )
+        Future.wait(existingTodos.map((x) => client.delete('todos/${x['id']}')) )
           .then((_) { 
-              int i=0;
-              Futures.wait( todos.map((text) => client.todos({'content':text, 'order':i++})) )
-                .then( markTodoCompleted );
+            int i=0;
+            Future.wait( todos.map((text) => client.todos({'content':text, 'order':i++})) )
+              .then( markTodoCompleted );
           });      
       });    
 
