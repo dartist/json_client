@@ -11,16 +11,15 @@ Add this to your package's pubspec.yaml file:
 	  json_client: 0.1.1
 
 The current version relies on the **dart:io** package so only works in the Dart VM. A future update will include an 
-identical JsonClient that wraps XMLHttpRequest so can be transpiled to JavaScript and run in all browsers. 
-Watch this repo or follow [@demisbellot](http://twitter.com/demisbellot) for updates.
+identical JsonClient that wraps HttpRequest (i.e. Ajax's XMLHttpRequest) so can be transpiled to JavaScript and run 
+in all browsers. Watch this repo or follow [@demisbellot](http://twitter.com/demisbellot) for updates.
 
-JsonClient takes advantages of Dart's **noSuchMethod** language feature to offer a succinct, ruby-esque dynamic API as well as the standard get/post/put/delete HTTP Client methods found in most HTTP clients. 
-
-What ever your preference, each method supports both a Futures response (akin to promise in jQuery or Task in C#) or async callback styles.
+JsonClient takes advantages of Dart's **noSuchMethod** language feature to offer a succinct, ruby-esque dynamic API 
+as well as the standard get/post/put/delete HTTP Client methods found in most HTTP clients. 
 
 ## Usage
 
-The only required argument needed is the **urlRoot** which is the base Url that all relative Urls will base themselves off.
+The only argument needed is the **urlRoot** which is the base Url that all relative Urls will base themselves off.
 
     String urlRoot = "http://www.servicestack.net/Backbone.Todos";
     var client = new JsonClient(urlRoot);
