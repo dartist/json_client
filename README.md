@@ -35,7 +35,7 @@ or as a method:
 
     client.todos();
 
-This call makes a JSON request for the [/todos](http://www.servicestack.net/Backbone.Todos/todos?format=json) url. Since all API methods on the client are async, the two ways we have to access the response include:
+This call makes a JSON request for the [/todos](http://www.servicestack.net/Backbone.Todos/todos?format=json) url. 
 
 ### Using Futures in Dart 
 
