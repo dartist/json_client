@@ -42,7 +42,7 @@ This call makes a JSON request for the [/todos](http://www.servicestack.net/Back
 We use Dart's [Future's API](http://api.dartlang.org/dart_core/Future.html) to attach your callback as a continuation on the returned Future, which looks like:
 
     client.todos()
-      .then((response) => print("I have ${response.length} things left todo"));
+      .then((todoItems) => print("I have ${todoItems.length} things left todo"));
 
 The dynamic API also supports optional params, any scalar variable (e.g. String, number) is combined with the **urlRoot** and the **dynamicMethod()** name to form the url like: `{urlRoot}/{dynamicMethod}/{scalarParam}`. Knowing this we can fetch a single todo with:
 
