@@ -36,7 +36,7 @@ Do_Northwind(){
 Do_RestFiles(){
   print("Do_RestFiles(): ");
   
-  var client = newClient("http://www.servicestack.net/RestFiles");
+  var client = newClient("http://mono.servicestack.net/RestFiles");
   
   client.files
     .then((r) => print("GET response: ${r}"));
@@ -62,7 +62,7 @@ Do_RestFiles(){
 Do_BackboneTodos(){
   print("Do_BackboneTodos(): ");
   
-  var client = newClient("http://www.servicestack.net/Backbone.Todos");
+  var client = newClient("http://mono.servicestack.net/Backbone.Todos/");
   
   List todos = [
     'Learn Dart!', 

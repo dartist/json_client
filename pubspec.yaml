@@ -1,8 +1,5 @@
 name: json_client
-version: 0.1.2
 author: Demis Bellot <demis.bellot@gmail.com>
-description: A generic async HTTP Client optimized for consuming JSON web services
+version: 0.1.3
 homepage: https://github.com/dartist/json_client
-
-#dependencies:
-#  unittest: any
+description: A generic async HTTP Client optimized for consuming JSON web services
