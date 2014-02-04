@@ -21,7 +21,7 @@ Do_Rockstars(){
 Do_Northwind(){
   print("Do_Northwind(): ");
 
-  var client = newClient("http://www.servicestack.net/ServiceStack.Northwind");  
+  var client = newClient("http://mono.servicestack.net/ServiceStack.Northwind");  
   client.customers()
     .then((response) { 
       var mexicanNames = response['Customers']
