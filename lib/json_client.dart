@@ -4,7 +4,7 @@ import "dart:core";
 import "dart:io";
 import "dart:mirrors";
 import "dart:async";
-import "dart:json" as JSON;
+import "dart:convert";
 
 typedef void RequestFilter(HttpClientRequest httpReq);
 typedef void ResponseFilter(HttpClientResponse httpRes);
@@ -156,7 +156,7 @@ class JsonClient {
       if (httpMethod == "POST" || httpMethod == "PUT") {
         httpReq.headers.set(HttpHeaders.CONTENT_TYPE, "application/json");
         if (postData != null) {
-          var jsonData = JSON.stringify(postData);
+          var jsonData = JSON.encode(postData);
           logDebug("writting: ${jsonData} at ${path}");
           httpReq.contentLength = jsonData.length;
           httpReq.write(jsonData);
@@ -173,7 +173,7 @@ class JsonClient {
       if (responseFilter != null) responseFilter(httpRes);
 
       StringBuffer sb = new StringBuffer();
-      httpRes.transform(new StringDecoder())
+      httpRes.transform(new AsciiDecoder(allowInvalid: true))
         .listen((String data){
           sb.write(data);
         })
@@ -184,7 +184,7 @@ class JsonClient {
             logDebug("RECV onData: $data");            
             response = data.isEmpty 
               ? null
-              : JSON.parse(data);
+              : JSON.decode(data);
           }
           catch(e) { _notifyError(task, e, "Error Parsing: $data"); return; }
 
