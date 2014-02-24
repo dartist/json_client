@@ -26,13 +26,7 @@ class JsonClient {
   HttpClient _client;
   int logLevel;
 
-  JsonClient(String urlRoot)
-  {
-    baseUri = Uri.parse(urlRoot);
-    logLevel = LogLevel.Warn;
-  }
-
-  JsonClient(String urlRoot, HttpClient client)
+  JsonClient(String urlRoot, [HttpClient client = null])
   {
       baseUri = Uri.parse(urlRoot);
       logLevel = LogLevel.Warn;
