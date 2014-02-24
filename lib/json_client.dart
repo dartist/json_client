@@ -23,12 +23,20 @@ class JsonClient {
   RequestFilter requestFilter;
   ResponseFilter responseFilter;
   Function onError;
+  HttpClient _client;
   int logLevel;
 
   JsonClient(String urlRoot)
   {
     baseUri = Uri.parse(urlRoot);
     logLevel = LogLevel.Warn;
+  }
+
+  JsonClient(String urlRoot, HttpClient client)
+  {
+      baseUri = Uri.parse(urlRoot);
+      logLevel = LogLevel.Warn;
+      _client = client;
   }
 
   void set urlRoot(String url) {
@@ -143,7 +151,7 @@ class JsonClient {
       logDebug("${status}");
     }
 
-    var client = new HttpClient();
+    var client = _client == null ? new HttpClient() : _client;
     client.open(httpMethod, uri.host, port, path).then((HttpClientRequest httpReq){
       logDebug("onReq: httpMethod: $httpMethod, postData: $postData, path: $path");
 
