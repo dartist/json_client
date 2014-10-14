@@ -130,8 +130,6 @@ class JsonClient {
     if (logLevel >= LogLevel.Debug) {
       Map status = {
         'hasData': postData != null,
-        'hasSuccess': successFn != null,
-        'hasError': errorFn != null,
         'httpMethod': httpMethod,
         'postData': postData,
         'port': port,
