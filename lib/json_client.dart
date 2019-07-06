@@ -173,7 +173,7 @@ class JsonClient {
       if (responseFilter != null) responseFilter(httpRes);
 
       StringBuffer sb = new StringBuffer();
-      httpRes.transform(new AsciiDecoder(allowInvalid: true))
+      new AsciiDecoder(allowInvalid: true).bind(httpRes)
         .listen((String data){
           sb.write(data);
         })
